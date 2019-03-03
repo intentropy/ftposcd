@@ -1,0 +1,145 @@
+#!/usr/bin/python3
+"""
+Fishman Tripleplay MIDI to OSC converter
+    tripleplay_osc.py
+
+    Written By:
+        Shane Hutter
+
+    Connect to Fishman triple play via ALSA (maybe JACK?) and convert midi data over any
+    recieved MIDI channels to Open Sound Control messages, and send them to a target
+    host.  Ideally this host will run OSC Whispers, and forward the messages elsewhere.
+
+
+    Notes:
+        * User must be part of the audio group for MIDI port access
+        * exit the main loop with both an OSC, and a CC midi message
+            or better yet sysexe midi message (harder to fuck up live)
+        * This tends to crash if the FTP is turned off at the pickup.
+        * Midi channel 7 is used for communication between pickup and controller
+            - can cause issues, may be best not to send into FTP
+            - should be ok for converting FTP output to control things
+                -- The guitar/suth switch may be agood control
+        * Integer values must be limited due to MIDI using a signed byte
+            - int() % MAX_SIGNED_BYTE
+"""
+
+from argparse   import ArgumentParser
+from liblo      import ServerError
+from mido       import (
+        open_input  , open_output   ,
+        )
+from os         import uname
+from sys        import exit
+from time       import sleep
+from FTP        import (
+        INPUT   , MIDI_PICKUP_NAME  , OUTPUT    ,
+        )
+from FTP.midi   import (
+        ftp_inputs              , ftp_outputs   ,
+        midi_dictionary         , midi_tuple    ,
+        FTP_FIRST_DEVICE_INDEX  ,
+        )
+from FTP.osc    import (
+        osc_target      , register_coc_osc_input    , register_ftp_osc_input    , 
+        send_osc_midi   ,
+        OSCServer       ,
+        OSC_PATH        ,
+        )
+
+
+DEBUG   = True
+LATENCY = .001
+
+# Testing only, load from conf
+HAL_IP              = "192.168.91.141"
+HAL_PORT            = 9001
+FTP_LISTEN_PORT     = 9191
+COC_LISTEN_PORT     = 9193
+
+
+def parse_args():
+    return
+
+
+def main():
+    """
+        Main code block
+    """
+    
+    # Create OSC Client targets
+    osc_client_target   = osc_target( HAL_IP    , HAL_PORT )
+
+    # Open a midi input connection to the first ftp input
+    '''
+        OSCServer inherits from ServerThread.  Wrap this with in a try, except block
+            to catch ServerError in case the osc_server fails from not having access
+            to the required listing port
+    '''
+    with open_input(
+           ftp_inputs()[ FTP_FIRST_DEVICE_INDEX ] 
+            ) as midi_in , open_output(
+                    ftp_outputs()[ FTP_FIRST_DEVICE_INDEX ]
+                    ) as midi_out , OSCServer( FTP_LISTEN_PORT ) as ftp_osc_server , OSCServer( COC_LISTEN_PORT ) as  coc_osc_server: 
+
+                # Register OSC Server methods
+                '''
+                    Call a method from ftp.osc that registers all the required
+                    methods.
+
+                    Pass in osc_server, and have it create the methods with each path
+                    and expected value.
+
+                    In ftp.osc import from ftp.midi the methods that used
+                    to send the midi data into the FTP.
+                '''
+                # Register OSC methods for the FTP
+                register_ftp_osc_input( ftp_osc_server )
+
+                # Register OSC methods for Command and Control of ftposcd
+                register_coc_osc_input( coc_osc_server )
+
+                
+                # Main loop
+                alive   = True
+                while alive:
+                    
+                    # Incoming MIDI to outgoing OSC
+                    for message in midi_in.iter_pending():
+                        # Send recieved midi messages as osc
+                        '''
+                            Is the midi chnanel in the midi tuple?
+                            If not send midi channel in the path
+                        '''
+                        send_osc_midi(
+                                osc_client_target       ,
+                                OSC_PATH.format(
+                                    hostname    = uname().nodename                          ,
+                                    midi_pickup = MIDI_PICKUP_NAME                          ,
+                                    direction   = OUTPUT                                    ,
+                                    channel     = midi_dictionary( message )[ "channel" ]   ,
+                                    )                   ,
+                                midi_tuple( message )   ,
+                                )
+                    
+                    # Incoming OSC to outgoing MIDI ( Tripleplay Control )
+                    
+
+                    # Sleep for latency
+                    '''
+                        reduce cpu with unrestrained looping
+                        replace with the OSC listening latency
+                    '''
+                    sleep( LATENCY )
+    return
+
+
+
+if __name__ == "__main__":
+    if DEBUG:
+        main()
+    else:
+        try:
+            main()
+        except Exception as error:
+            exit( error )
