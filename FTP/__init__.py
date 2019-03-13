@@ -9,15 +9,21 @@ Fishman Tripleplay MIDI to OSC converter
         This contains shared CONSTANTS and functions for modules packaged in FTP
 """
 
+from sys    import (
+        platform    , version_info  ,
+        )
+from os     import environ
 
-ZERO    = 0
-ONE     = 1
+
+ZERO    , ONE   = 0 , 1
 
 MAXIMUM_SIGNED_BYTE   = 127
 
-INPUT   = "input"
-OUTPUT  = "output"
+INPUT   , OUTPUT    = "input"   , "output"
 
+# Replace these by assigning:
+# for x in enumerate( y ):
+#   iteration , value = x
 ENUMERATE_ITERATE_INDEX = ZERO
 ENUMERATE_VALUE_INDEX   = ONE
 
@@ -27,6 +33,7 @@ WITH_ITEM   = "{expression} as {target},"
 
 
 ## Program details
+PROG    = {}
 PROG_NAME           = "ftposcd"
 PROG_VERSION        = "0.0.0"
 PROG_AUTHOR         = "Shane Hutter"
@@ -40,6 +47,7 @@ PROG_PACKAGES       = [ "FTP" , ]
 
 
 ## System Constants
+SYSTEM  = {}    # How to work out prefered path?
 PLATFORM            = platform
 ROOT_FS             = "/"
 PREFERED_PATHS      = (
@@ -59,11 +67,17 @@ for path in PREFERED_PATHS:
         break
 if not PATH:
     PATH    = ENVIRONMENT_PATHS[ FIRST_INDEX ]
+
 # Systemd
+SYSTEMD = {}
 SYSTEMD_UNIT_DIR        = "/usr/lib/systemd/system"
 SYSTEMD_SERVICE_UNIT    = "ftposcd.service"
 
-
+# RegEx
+REGEX   = {
+        "only-numbers"  : "^[0-9]*$"    ,
+        }
 
 # Fishman Tripleplay specific
+FTP = {}
 MIDI_PICKUP_NAME    = "tripleplay"
