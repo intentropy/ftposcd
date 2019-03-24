@@ -26,9 +26,7 @@ Fishman Tripleplay MIDI to OSC converter
 
 from argparse   import ArgumentParser
 from liblo      import ServerError
-from mido       import (
-        open_input  , open_output   ,
-        )
+from mido       import open_input
 from sys        import exit
 from time       import sleep
 from FTP        import (
@@ -75,11 +73,9 @@ def main():
     '''
     with open_input(
            ftp_inputs()[ FTP_FIRST_DEVICE_INDEX ] 
-            ) as midi_in , open_output(
-                    ftp_outputs()[ FTP_FIRST_DEVICE_INDEX ]
-                    ) as midi_out , OSCServer( 
-                            config_data[ "local-osc-port" ]
-                            ) as ftp_osc_server:
+            ) as midi_in , OSCServer( 
+                        config_data[ "local-osc-port" ]
+                        ) as ftp_osc_server:
 
                 # Register OSC methods for the FTP
                 register_ftp_osc_input( ftp_osc_server )

@@ -57,6 +57,13 @@ OSC_TYPETAGS    = {
         "any"       : None      ,
         }
 
+OSC_ARGS_INDICES = {
+        "path"      : 0 ,
+        "args"      : 1 ,
+        "type"      : 2 ,
+        "object"    : 3 ,
+        "user data" : 4 , # ? Not 100% sure this is user_data from a pylibl method
+        }
 
 OSC_PATH_TO_CC = {
         FTP_POLY_PATH       : 127   ,

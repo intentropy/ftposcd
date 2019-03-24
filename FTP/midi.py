@@ -11,15 +11,17 @@ Fishman Tripleplay MIDI to OSC converter
 """
 
 from .      import (
-        ENUMERATE_VALUE_INDEX   , ENUMERATE_ITERATE_INDEX   , HEX_NOTATION  ,
-        MAXIMUM_SIGNED_BYTE     , ONE                       ,
-        WITH_ITEM               , ZERO                      ,
+        HEX_NOTATION    , MAXIMUM_SIGNED_BYTE   , WITH_ITEM , 
+        INDICES         ,
+        ZERO            , ONE                   ,
         )
 from mido   import (
-        get_input_names , get_output_names  ,
+        get_input_names , get_output_names  ,   open_output ,
+        Message         ,
         )
 
 
+# MIDI CONST
 MIDI_TYPE_INDEX         = MIDI_DATA_KEY_INDEX  = FTP_FIRST_DEVICE_INDEX = ZERO
 MIDI_DATA_VALUE_INDEX   = ONE
 
@@ -30,6 +32,18 @@ MIDI_DATA_DELIMITER     = "="
 MIDI_TUPLE_LENGTH       = 4
 FTP_MIDI_NAME           = "Fishman TriplePlay MIDI"
 
+FTP_MONO_MODE_CC    = 126
+FTP_POLY_MODE_CC    = 127
+FTP_CC_CHANNEL      = 0
+
+
+# Midi Variables
+midi_cc = {
+        "type"      : "control_change"  ,
+        "channel"   : FTP_CC_CHANNEL    ,
+        "control"   : int()             ,
+        "value"     : int()             ,
+        }
 
 def ftp_inputs():
     """
@@ -131,6 +145,7 @@ def ftp_control():
     """
         Recieve a MIDI Tuple
     """
+    return
 
 
 def ftp_mono_mode( *args ):
@@ -145,13 +160,46 @@ def ftp_mono_mode( *args ):
 
         Any type as input, True and non-zero are True, everything else is False.
     """
-    print( args )
+    from .osc   import OSC_ARGS_INDICES
+    # Open midi output
+    with open_output(
+            ftp_outputs()[ FTP_FIRST_DEVICE_INDEX ]
+            ) as midi_out:
+        # update midi_cc values to fit either case
+        midi_cc.update(
+                {
+                    "value"     : MIDI_TRUE ,
+                    }
+                )
+        # Determine if mode is toggled on or off
+        if bool(
+            args[
+                OSC_ARGS_INDICES[ "args" ]
+                ][
+                    INDICES[ "first" ]
+                    ]
+                ):
+            # Set midi_cc for FTP for Mono Mode
+            midi_cc.update(
+                    {
+                        "control"   : FTP_MONO_MODE_CC  ,
+                        }
+                    )
+        else:
+            # Set midi_cc for FTP for Poly Mode
+            midi_cc.update(
+                    {
+                        "control"   : FTP_POLY_MODE_CC  ,
+                        }
+                    )
+        # Send out the midi_cc as Midi message
+        midi_out.send(
+                Message( **midi_cc )
+                )
     return
 
 
-def ftp_poly_mode(
-        poly    = True  ,
-        ):
+def ftp_poly_mode( *args ):
     """
         Send CC to FTP to place it in poly mode.
 
@@ -162,6 +210,42 @@ def ftp_poly_mode(
 
         Any type as input, True and non-zero are True, everything else is False.
     """
+    from .osc   import OSC_ARGS_INDICES
+    # Open midi output
+    with open_output(
+            ftp_outputs()[ FTP_FIRST_DEVICE_INDEX ]
+            ) as midi_out:
+        # update midi_cc values to fit either case
+        midi_cc.update(
+                {
+                    "value"     : MIDI_TRUE ,
+                    }
+                )
+        # Determine if mode is toggled on or off
+        if bool(
+            args[
+                OSC_ARGS_INDICES[ "args" ]
+                ][
+                    INDICES[ "first" ]
+                    ]
+                ):
+            # Set midi_cc for FTP for Poly Mode
+            midi_cc.update(
+                    {
+                        "control"   : FTP_POLY_MODE_CC  ,
+                        }
+                    )
+        else:
+            # Set midi_cc for FTP for Mono Mode
+            midi_cc.update(
+                    {
+                        "control"   : FTP_MONO_MODE_CC  ,
+                        }
+                    )
+        # Send out the midi_cc as Midi message
+        midi_out.send(
+                Message( **midi_cc )
+                )
     return
 
 
