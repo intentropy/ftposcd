@@ -287,7 +287,7 @@ def register_ftp_osc_input( osc_server ):
 
 
 
-def register_coc_osc_input( osc_server ):
+def register_cac_osc_input( osc_server ):
     """
         This method registers Command and Control methods for handeling
         OSC messages that are used to control ftposcd.

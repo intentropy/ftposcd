@@ -35,13 +35,16 @@ from time       import sleep
 from FTP        import (
         INPUT   , MIDI_PICKUP_NAME  , OUTPUT    ,
         )
+from FTP.config import (
+        load_config ,
+        )
 from FTP.midi   import (
         ftp_inputs              , ftp_outputs   ,
         midi_dictionary         , midi_tuple    ,
         FTP_FIRST_DEVICE_INDEX  ,
         )
 from FTP.osc    import (
-        osc_target      , register_coc_osc_input    , register_ftp_osc_input    , 
+        osc_target      , register_cac_osc_input    , register_ftp_osc_input    , 
         send_osc_midi   ,
         OSCServer       ,
         OSC_PATH        ,
@@ -50,12 +53,6 @@ from FTP.osc    import (
 
 DEBUG   = True
 LATENCY = .001
-
-# Testing only, load from conf
-HAL_IP              = "192.168.91.141"
-HAL_PORT            = 9001
-FTP_LISTEN_PORT     = 9191
-COC_LISTEN_PORT     = 9193
 
 
 def parse_args():
@@ -66,9 +63,15 @@ def main():
     """
         Main code block
     """
+
+    # Load the configuration file
+    config_data = load_config()
     
     # Create OSC Client targets
-    osc_client_target   = osc_target( HAL_IP    , HAL_PORT )
+    osc_client_target   = osc_target( 
+            config_data[ "remote-osc-host" ]    , 
+            config_data[ "remote-osc-port" ]    ,
+            )
 
     # Open a midi input connection to the first ftp input
     '''
@@ -80,7 +83,11 @@ def main():
            ftp_inputs()[ FTP_FIRST_DEVICE_INDEX ] 
             ) as midi_in , open_output(
                     ftp_outputs()[ FTP_FIRST_DEVICE_INDEX ]
-                    ) as midi_out , OSCServer( FTP_LISTEN_PORT ) as ftp_osc_server , OSCServer( COC_LISTEN_PORT ) as  coc_osc_server: 
+                    ) as midi_out , OSCServer( 
+                            config_data[ "local-osc-port" ]
+                            ) as ftp_osc_server , OSCServer( 
+                                    config_data[ "local-cac-port" ]
+                                    ) as  cac_osc_server: 
 
                 # Register OSC Server methods
                 '''
@@ -97,7 +104,7 @@ def main():
                 register_ftp_osc_input( ftp_osc_server )
 
                 # Register OSC methods for Command and Control of ftposcd
-                register_coc_osc_input( coc_osc_server )
+                register_cac_osc_input( cac_osc_server )
 
                 
                 # Main loop
