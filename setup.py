@@ -43,7 +43,7 @@ setup(
                     ]   ,
                 )   ,
             (
-                SYSTEMD_UNIT_DIR    .   # Systemd service unit
+                SYSTEMD_UNIT_DIR    ,   # Systemd service unit
                 [
                     SYSTEMD_SERVICE_UNIT    ,
                     ]   ,
