@@ -34,7 +34,6 @@ config_data = {
         "remote-osc-host"   : str() ,
         "remote-osc-port"   : int() ,
         "local-osc-port"    : int() ,
-        "local-cac-port"    : int() ,
         }
 
 

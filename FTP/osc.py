@@ -11,7 +11,8 @@ Fishman Tripleplay MIDI to OSC converter
 """
 
 from .      import (
-        MIDI_PICKUP_NAME    , OUTPUT    ,
+        MIDI_PICKUP_NAME    , OUTPUT    , INPUT ,
+        HOSTNAME            ,
         )
 from .midi  import (
         ftp_mono_mode   , ftp_pedal     , ftp_poly_mode , ftp_sustain   ,
@@ -21,7 +22,6 @@ from liblo  import (
         Address , AddressError  , Message       ,
         send    , ServerError   , ServerThread  ,
         )
-from os     import uname
 from sys    import exit
 
 
@@ -30,6 +30,14 @@ FTP_MONO_PATH       = "mono"
 FTP_SUSTAIN_PATH    = "sustain"
 FTP_PEDAL_PATH      = "pedal"
 FTP_MIDI_PANIC_PATH = "panic"
+# Replace the above with this dictionary
+OSC_INPUT_PATHS = {
+        "poly mode"     : "poly"    ,
+        "mono mode"     : "mono"    ,
+        "sustain pedal" : "sustain" ,
+        "midi pedal"    : "pedal"   ,
+        "midi panic"    : "panic"   ,
+        }
 
 OSC_TYPETAGS    = {
         "midi"      : "m"       ,
@@ -46,9 +54,9 @@ OSC_TYPETAGS    = {
         "nil"	    : "N"	,
         "infinitum" : "I"	,
         "blob"      : "b"	,
-        "any"       : "*"       ,
-        "none"      : None      ,
+        "any"       : None      ,
         }
+
 
 OSC_PATH_TO_CC = {
         FTP_POLY_PATH       : 127   ,
@@ -58,23 +66,28 @@ OSC_PATH_TO_CC = {
         }
 
 
-# OSC_PATH info
+
+# osc_path info
 '''
-    hostname is the systems host name, uname().nodename
+    ostname is the systems hostname
     midi_pickup is the pickup name MIDI_PICKUP_NAME
     direction is relative the midi pickups perspective
         OUTPUT is data leaving the pickup
         INPUT is data entering the pickup
     
     channel refers to the midi channel of the message OUTPUT only
-
-
     INPUT is always channel 0, but specifies the cc command name, then provides
         the relevent value.
         format channel as the command sent to ftp
             i.e. mono, poly, pedal
 '''
-OSC_PATH = "/{hostname}/{midi_pickup}/{direction}/{channel}"
+osc_path = "/{hostname}/{midi_pickup}/{direction}/{channel}"
+osc_path_format = {
+        "hostname"      : HOSTNAME          ,
+        "midi_pickup"   : MIDI_PICKUP_NAME  ,
+        "direction"     : str()             ,
+        "channel"       : str()             ,
+        }
 
 
 
@@ -217,27 +230,35 @@ def register_ftp_osc_input( osc_server ):
             These methods should take any type, and if the value is either non-zero
             or True, then they should pass a 127 to the CC
     '''
-    # Poly
-    osc_server.add_method(
-            OSC_PATH.format(
-                hostname    = uname().nodename  ,
-                midi_pickup = MIDI_PICKUP_NAME  ,
-                direction   = OUTPUT            ,
-                channel     = FTP_POLY_PATH     , 
-                )                   ,
-            OSC_TYPETAGS[ "any" ]   ,
-            ftp_poly_mode           ,
+    # All OSC server methods use "input" in it's path
+    osc_path_format.update(
+            { 
+                "direction"   : INPUT   ,
+                }   ,
             )
-    # Mono
+
+    # Poly mode
+    osc_path_format.update(
+            { 
+                "channel" :  OSC_INPUT_PATHS[ "poly mode" ] ,
+                }   ,
+            )
     osc_server.add_method(
-            OSC_PATH.format(
-                hostname    = uname().nodename  ,
-                midi_pickup = MIDI_PICKUP_NAME  ,
-                direction   = OUTPUT            ,
-                channel     = FTP_MONO_PATH     , 
-                )                   ,
-            OSC_TYPETAGS[ "any" ]   ,
-            ftp_mono_mode           ,
+            osc_path.format( **osc_path_format )    ,
+            OSC_TYPETAGS[ "any" ]                   ,
+            ftp_poly_mode                           ,
+            )
+    
+    # Mono mode
+    osc_path_format.update(
+            { 
+                "channel" :  OSC_INPUT_PATHS[ "mono mode" ] ,
+                }   ,
+            )
+    osc_server.add_method(
+            osc_path.format( **osc_path_format )    ,
+            OSC_TYPETAGS[ "any" ]                   ,
+            ftp_mono_mode                           ,
             )
 
 
@@ -254,42 +275,40 @@ def register_ftp_osc_input( osc_server ):
 
         Pass an int to either while this is being worked out.
     '''
-    # Sustain
-    osc_server.add_method(
-            OSC_PATH.format(
-                hostname    = uname().nodename  ,
-                midi_pickup = MIDI_PICKUP_NAME  ,
-                direction   = OUTPUT            ,
-                channel     = FTP_SUSTAIN_PATH     , 
-                )                   ,
-            OSC_TYPETAGS[ "int32" ] ,
-            ftp_sustain             ,
+    # Sustain Pedal
+    osc_path_format.update(
+            { 
+                "channel" :  OSC_INPUT_PATHS[ "sustain pedal" ] ,
+                }   ,
             )
-    # Pedal
     osc_server.add_method(
-            OSC_PATH.format(
-                hostname    = uname().nodename  ,
-                midi_pickup = MIDI_PICKUP_NAME  ,
-                direction   = OUTPUT            ,
-                channel     = FTP_PEDAL_PATH     , 
-                )                   ,
-            OSC_TYPETAGS[ "int32" ] ,
-            ftp_pedal               ,
+            osc_path.format( **osc_path_format )    ,
+            OSC_TYPETAGS[ "int32" ]                 ,
+            ftp_sustain                             ,
+            )
+    
+    # Midi Pedal
+    osc_path_format.update(
+            { 
+                "channel" :  OSC_INPUT_PATHS[ "midi pedal" ] ,
+                }   ,
+            )
+    osc_server.add_method(
+            osc_path.format( **osc_path_format )    ,
+            OSC_TYPETAGS[ "int32" ]                 ,
+            ftp_pedal                               ,
             )
 
+    # Midi Panic
+    osc_path_format.update(
+            { 
+                "channel" :  OSC_INPUT_PATHS[ "midi pedal" ] ,
+                }   ,
+            )
+    osc_server.add_method(
+            osc_path.format( **osc_path_format )    ,
+            OSC_TYPETAGS[ "int32" ]                 ,
+            ftp_pedal                               ,
+            )
 
-
-
-
-
-
-    return
-
-
-
-def register_cac_osc_input( osc_server ):
-    """
-        This method registers Command and Control methods for handeling
-        OSC messages that are used to control ftposcd.
-    """
     return

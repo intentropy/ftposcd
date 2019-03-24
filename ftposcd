@@ -29,7 +29,6 @@ from liblo      import ServerError
 from mido       import (
         open_input  , open_output   ,
         )
-from os         import uname
 from sys        import exit
 from time       import sleep
 from FTP        import (
@@ -40,23 +39,18 @@ from FTP.config import (
         )
 from FTP.midi   import (
         ftp_inputs              , ftp_outputs   ,
-        midi_dictionary         , midi_tuple    ,
+        midi_dict               , midi_tuple    ,
         FTP_FIRST_DEVICE_INDEX  ,
         )
 from FTP.osc    import (
-        osc_target      , register_cac_osc_input    , register_ftp_osc_input    , 
-        send_osc_midi   ,
-        OSCServer       ,
-        OSC_PATH        ,
+        osc_target  , register_ftp_osc_input    , send_osc_midi ,
+        OSCServer   ,
+        osc_path    , osc_path_format           ,
         )
 
 
 DEBUG   = True
 LATENCY = .001
-
-
-def parse_args():
-    return
 
 
 def main():
@@ -85,53 +79,36 @@ def main():
                     ftp_outputs()[ FTP_FIRST_DEVICE_INDEX ]
                     ) as midi_out , OSCServer( 
                             config_data[ "local-osc-port" ]
-                            ) as ftp_osc_server , OSCServer( 
-                                    config_data[ "local-cac-port" ]
-                                    ) as  cac_osc_server: 
+                            ) as ftp_osc_server:
 
-                # Register OSC Server methods
-                '''
-                    Call a method from ftp.osc that registers all the required
-                    methods.
-
-                    Pass in osc_server, and have it create the methods with each path
-                    and expected value.
-
-                    In ftp.osc import from ftp.midi the methods that used
-                    to send the midi data into the FTP.
-                '''
                 # Register OSC methods for the FTP
                 register_ftp_osc_input( ftp_osc_server )
 
-                # Register OSC methods for Command and Control of ftposcd
-                register_cac_osc_input( cac_osc_server )
-
-                
                 # Main loop
                 alive   = True
                 while alive:
                     
                     # Incoming MIDI to outgoing OSC
                     for message in midi_in.iter_pending():
+                        if "channel" in midi_dict( message ):
+                            osc_path_format.update(
+                                    direction   = OUTPUT    ,
+                                    channel     = midi_dict( message )[ "channel" ] ,
+                                    )
+                        else:
+                            # Need to work out why the midi data has no channel (SysEx?)
+                            osc_path_format.update(
+                                    direction   = OUTPUT    ,
+                                    channel     = "None"    ,
+                                    )
+
                         # Send recieved midi messages as osc
-                        '''
-                            Is the midi chnanel in the midi tuple?
-                            If not send midi channel in the path
-                        '''
                         send_osc_midi(
-                                osc_client_target       ,
-                                OSC_PATH.format(
-                                    hostname    = uname().nodename                          ,
-                                    midi_pickup = MIDI_PICKUP_NAME                          ,
-                                    direction   = OUTPUT                                    ,
-                                    channel     = midi_dictionary( message )[ "channel" ]   ,
-                                    )                   ,
-                                midi_tuple( message )   ,
+                                osc_client_target                       ,
+                                osc_path.format( **osc_path_format )    ,
+                                midi_tuple( message )                   ,
                                 )
                     
-                    # Incoming OSC to outgoing MIDI ( Tripleplay Control )
-                    
-
                     # Sleep for latency
                     '''
                         reduce cpu with unrestrained looping

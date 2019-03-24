@@ -66,7 +66,7 @@ def ftp_outputs():
 
 
 
-def midi_dictionary(  message ):
+def midi_dict(  message ):
     """
         Convert a mido midi message into a dictionary.
         
@@ -79,19 +79,20 @@ def midi_dictionary(  message ):
     """
     midi_data   = dict()
 
-    for data in enumerate(
+    for iterate , value in enumerate(
             str( message ).split()
             ):
-        if data[ ENUMERATE_ITERATE_INDEX ] == MIDI_TYPE_INDEX:
+        if iterate == MIDI_TYPE_INDEX:
             midi_data.update(
                     {
-                        "type"  : data[ ENUMERATE_VALUE_INDEX ][ MIDI_TYPE_INDEX ]  ,
+                        "type"  : value[ MIDI_TYPE_INDEX ]  ,
                         }
                     )
         else:
             midi_data.update(
                     {
-                        data[ ENUMERATE_VALUE_INDEX ].split( MIDI_DATA_DELIMITER )[ MIDI_DATA_KEY_INDEX ]   : data[ ENUMERATE_VALUE_INDEX ].split( MIDI_DATA_DELIMITER )[ MIDI_DATA_VALUE_INDEX ]   ,
+                        value.split( MIDI_DATA_DELIMITER )[ MIDI_DATA_KEY_INDEX ]   :
+                        value.split( MIDI_DATA_DELIMITER )[ MIDI_DATA_VALUE_INDEX ] ,
                         }
                     )
     return midi_data
@@ -113,7 +114,7 @@ def midi_tuple( message ):
 
     # Convert message into a list
     midi_data  = message.bytes()
-    # Pad the list with 0's so it is always has a length of 4 (not greater either)
+    # Pad the list with 0's so it is always has a length of 4 (and ot greater)
     if len( midi_data ) <= MIDI_TUPLE_LENGTH:
         for padding in range(
                 len( midi_data )    ,
@@ -132,7 +133,7 @@ def ftp_control():
     """
 
 
-def ftp_mono_mode( mono ):
+def ftp_mono_mode( *args ):
     """
         Send CC to FTP to place it in mono mode.
 
@@ -144,6 +145,7 @@ def ftp_mono_mode( mono ):
 
         Any type as input, True and non-zero are True, everything else is False.
     """
+    print( args )
     return
 
 
