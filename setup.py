@@ -12,9 +12,10 @@ Fishman Tripleplay MIDI to OSC converter
 
 from distutils.core     import setup
 from FTP                import (
-        PROG_NAME           , PROG_VERSION      , PROG_AUTHOR           ,
-        PROG_AUTHOR_EMAIL   , PROG_DESC         , PROG_PATH             ,
-        PATH                , SYSTEMD_UNIT_DIR  , SYSTEMD_SERVICE_UNIT  ,
+        PROG_NAME           , PROG_VERSION          , PROG_AUTHOR   ,
+        PROG_AUTHOR_EMAIL   , PROG_DESC             , PROG_PACKAGES ,
+        PATH                , 
+        SYSTEMD_UNIT_DIR    , SYSTEMD_SERVICE_UNIT  ,
         )
 from FTP.config         import (
         CONFIG_DIR  , CONFIG_FILE   ,
