@@ -19,6 +19,8 @@ from mido   import (
         get_input_names , get_output_names  ,   open_output ,
         Message         ,
         )
+from rtmidi             import API_LINUX_ALSA
+from rtmidi.midiutil    import open_midiport
 
 
 # MIDI CONST
@@ -28,14 +30,55 @@ MIDI_DATA_VALUE_INDEX   = ONE
 MIDI_FALSE              = ZERO
 MIDI_TRUE               = MAXIMUM_SIGNED_BYTE
 
+MIDI_CHANNELS           = 16
+
 MIDI_DATA_DELIMITER     = "="
 MIDI_TUPLE_LENGTH       = 4
+MIDI_BYTES_INDICES      = {
+        "type"      : 0 ,
+        "note"      : 1 ,
+        "velocity"  : 2 ,
+        "time"      : 3 ,
+        }
+
 FTP_MIDI_NAME           = "Fishman TriplePlay MIDI"
 
 FTP_MONO_MODE_CC    = 126
 FTP_POLY_MODE_CC    = 127
 FTP_CC_CHANNEL      = 0
 
+FTP_CHANNEL_TO_OUTPORT = {
+        0   : "String 1 low"    ,
+        10  : "String 1 high"   ,
+        1   : "String 2 low"    ,
+        11  : "String 2 high"   ,
+        2   : "String 3 low"    ,
+        12  : "String 3 high"   ,
+        3   : "String 4 low"    ,
+        13  : "String 4 high"   ,
+        4   : "String 5 low"    ,
+        14  : "String 5 high"   ,
+        5   : "String 6 low"    ,
+        15  : "String 6 high"   ,
+        }
+
+FTP_OUTPORT_TO_CHANNEL = {
+        "String 1 low"  : 0     ,
+        "String 1 high" : 10    ,
+        "String 2 low"  : 1     ,
+        "String 2 high" : 11    ,
+        "String 3 low"  : 2     ,
+        "String 3 high" : 12    ,
+        "String 4 low"  : 3     ,
+        "String 4 high" : 13    ,
+        "String 5 low"  : 4     ,
+        "String 5 high" : 14    ,
+        "String 6 low"  : 5     ,
+        "String 6 high" : 15    ,
+        }
+
+FTPOSC2MIDI_ALL_OUTPORT = "All Strings"
+FTPOSC2MIDI_CLIENT      = "ftposc2midi"
 
 # Midi Variables
 midi_cc = {
@@ -44,6 +87,40 @@ midi_cc = {
         "control"   : int()             ,
         "value"     : int()             ,
         }
+
+midi_outport = {
+        "client_name"   : FTPOSC2MIDI_CLIENT    ,
+        "virtual"       : True                  ,
+        }
+
+
+def ftp_midi_string_outports():
+    """
+        Create a list of outputs for each string, and fretboard split (Mono Mode)
+
+        Return a tuple, containing one element per MIDI channel, with
+        a midi output instantiated in the index relative to the MIDI
+        channel in which each string, and it's fretboard split's channel,
+        as output by the Fishman Triple Play, when in Mono Mode.
+
+        Indices correlating to unrelated MIDI channels return None.
+    """
+    midi_outputs    = list()
+     # Create per-channel MIDI Outports
+    for midi_channel in range( MIDI_CHANNELS ):
+        if midi_channel in FTP_CHANNEL_TO_OUTPORT:
+            midi_outport.update(
+                    {
+                        "name"  : FTP_CHANNEL_TO_OUTPORT[ midi_channel ]    ,
+                        }
+                    )
+            midi_outputs.append(
+                    open_output( **midi_outport )
+                    )
+        else:
+            midi_outputs.append( None )
+    return tuple( midi_outputs )
+
 
 def ftp_inputs():
     """

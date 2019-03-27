@@ -31,6 +31,7 @@ from sys        import exit
 from time       import sleep
 from FTP        import (
         INPUT   , MIDI_PICKUP_NAME  , OUTPUT    ,
+        LATENCY ,
         )
 from FTP.config import (
         load_config ,
@@ -48,8 +49,6 @@ from FTP.osc    import (
 
 
 DEBUG   = True
-LATENCY = .001
-
 
 def main():
     """

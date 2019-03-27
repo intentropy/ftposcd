@@ -34,6 +34,7 @@ config_data = {
         "remote-osc-host"   : str() ,
         "remote-osc-port"   : int() ,
         "local-osc-port"    : int() ,
+        "ftposc2midi-port"  : int() ,
         }
 
 

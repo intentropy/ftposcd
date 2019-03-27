@@ -12,7 +12,9 @@ Fishman Tripleplay MIDI to OSC converter
 from sys    import (
         platform    , version_info  ,
         )
-from os     import environ
+from os     import (
+        environ , uname ,
+        )
 
 
 ZERO    , ONE   = 0 , 1
@@ -21,9 +23,15 @@ MAXIMUM_SIGNED_BYTE   = 127
 
 INPUT   , OUTPUT    = "input"   , "output"
 
+# Global Indices
+INDICES = {
+        "only"  : ZERO  ,
+        "first" : ZERO  ,
+        }
+
 # Replace these by assigning:
 # for x in enumerate( y ):
-#   iteration , value = x
+#   iterate , value = x
 ENUMERATE_ITERATE_INDEX = ZERO
 ENUMERATE_VALUE_INDEX   = ONE
 
@@ -35,7 +43,7 @@ WITH_ITEM   = "{expression} as {target},"
 ## Program details
 PROG    = {}
 PROG_NAME           = "ftposcd"
-PROG_VERSION        = "0.0.0"
+PROG_VERSION        = "0.0.1"
 PROG_AUTHOR         = "Shane Hutter"
 PROG_AUTHOR_EMAIL   = "shane@intentropycs.com"
 PROG_DESC           = """This software connects to the Fishman Triple Play USB MIDI
@@ -47,7 +55,7 @@ PROG_PACKAGES       = [ "FTP" , ]
 
 
 ## System Constants
-SYSTEM  = {}    # How to work out prefered path?
+HOSTNAME            = uname().nodename
 PLATFORM            = platform
 ROOT_FS             = "/"
 PREFERED_PATHS      = (
@@ -81,3 +89,6 @@ REGEX   = {
 # Fishman Tripleplay specific
 FTP = {}
 MIDI_PICKUP_NAME    = "tripleplay"
+
+
+LATENCY = .001

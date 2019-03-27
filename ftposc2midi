@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""
+Fishman Triple Play OSC Daemon -> MIDI coversion server
+    ftposc2midi
+
+    Written By:
+        Shane Hutter
+
+    This software:
+        * Creates an OSC server
+        * Creates 13 MIDI outputs
+
+    This is an interface between ftposcd and Virtual MIDI outputs.
+    The OSC server listens for /*/tripleplay/output/X OSC paths
+    The top level "directory" (*) in the OSC Path only indicates the hostname
+        of the sending client.  It is ignored, except maybe for logging
+        purposes.
+    The bottom level "directory" (X) represents the channel number.
+        Only these chanels are accepted
+            0 to 5
+            10 to 15
+        Mono wll send out all 12
+        Poly will only send out channel 0
+
+    When an OSC Midi message is recieved, convert it into a midi message,
+        and send out an output corresponding to the channel.
+    Each output sends out channel 0
+    Midi Output 13 will send all notes, using the original midi channel
+"""
+
+from FTP        import (
+        LATENCY , MIDI_PICKUP_NAME  ,
+        )
+from FTP.config import load_config
+from FTP.midi   import (
+        MIDI_BYTES_INDICES          ,
+        ftp_midi_string_outports    ,
+        )
+from FTP.osc    import (
+        OSC_TYPETAGS    , OSC_PATH_DELIMITER    ,   FTP_OSC_PATH_INDICES    ,
+        OSCServer       ,
+        )
+from mido       import (
+        open_output , Message   ,
+        )
+from sys        import exit
+from time       import sleep
+
+
+
+alive   = True
+
+
+def osc2midi_convert(
+        path            ,
+        args            ,
+        typespec        ,
+        function        ,
+        midi_outports   ,
+        ):
+    """
+        OSC Server method
+            uses global midi_outports
+            parse OSC path
+
+    """
+    osc_path    = path.split( OSC_PATH_DELIMITER )
+    if osc_path[ 
+            FTP_OSC_PATH_INDICES[ "device" ]
+            ] == MIDI_PICKUP_NAME and osc_path[ 
+                    FTP_OSC_PATH_INDICES[ "direction" ] 
+                    ] == "output":
+        midi_outport    = midi_outports[
+            int(
+                osc_path[
+                    FTP_OSC_PATH_INDICES[ "channel" ]
+                    ]
+                )
+            ]
+        if midi_outport:
+            # Convert args into MIDI Message
+            # ( Note_On(144)/Note_Offmsg2, Note , Velocity, Time(0) )
+            if args[0][
+                MIDI_BYTES_INDICES[ "time" ]
+                ]:
+                # If there is a time byte, use it
+                midi_outport.send(
+                        Message.from_bytes( args[0] )
+                        )
+            else:
+                # Otherwise, take the time byte away
+                midi_outport.send( 
+                        Message.from_bytes( args[0][:-1] )
+                        )
+                
+            '''
+            print( midi_outport )
+            print( args )
+            print( msg )
+            '''
+
+
+
+    return
+
+
+def main():
+    """
+        Main code block
+    """
+   
+    # Load the OSC Server port from the configuration file
+    osc_server_port = load_config()[ "ftposc2midi-port" ]
+
+    # Create per-string MIDI outports
+    midi_outports = ftp_midi_string_outports()
+
+    print( osc_server_port )
+    print( midi_outports )
+
+    
+    # Start OSC server
+    with OSCServer( osc_server_port ) as osc_server:
+        # Register OSC method
+        osc_server.add_method(
+                None                    ,
+                OSC_TYPETAGS[ "midi" ]  ,
+                osc2midi_convert        ,
+                midi_outports
+                )
+        
+        # Main loop
+        while alive:
+            sleep( LATENCY )
+
+
+    # Close per-string MIDI outports
+    for outport in midi_outports:
+        if outport:
+            outport.close()
+    return exit()
+
+
+if __name__ == "__main__":
+    main()

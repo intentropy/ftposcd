@@ -25,11 +25,6 @@ from liblo  import (
 from sys    import exit
 
 
-FTP_POLY_PATH       = "poly"
-FTP_MONO_PATH       = "mono"
-FTP_SUSTAIN_PATH    = "sustain"
-FTP_PEDAL_PATH      = "pedal"
-FTP_MIDI_PANIC_PATH = "panic"
 # Replace the above with this dictionary
 OSC_INPUT_PATHS = {
         "poly mode"     : "poly"    ,
@@ -66,10 +61,19 @@ OSC_ARGS_INDICES = {
         }
 
 OSC_PATH_TO_CC = {
-        FTP_POLY_PATH       : 127   ,
-        FTP_MONO_PATH       : 126   ,
-        FTP_SUSTAIN_PATH    : 66    ,
-        FTP_PEDAL_PATH      : 66    ,
+        OSC_INPUT_PATHS[ "poly mode" ]      : 127   ,
+        OSC_INPUT_PATHS[ "mono mode" ]      : 126   ,
+        OSC_INPUT_PATHS[ "sustain pedal" ]  : 66    ,
+        OSC_INPUT_PATHS[ "midi pedal" ]     : 66    ,
+        }
+
+OSC_PATH_DELIMITER  = "/"
+FTP_OSC_PATH_INDICES    = {
+        "root"      : 0 ,
+        "hostname"  : 1 ,
+        "device"    : 2 ,
+        "direction" : 3 ,
+        "channel"   : 4 ,
         }
 
 
@@ -319,3 +323,4 @@ def register_ftp_osc_input( osc_server ):
             )
 
     return
+
