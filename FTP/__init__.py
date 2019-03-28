@@ -43,7 +43,7 @@ WITH_ITEM   = "{expression} as {target},"
 ## Program details
 PROG    = {}
 PROG_NAME           = "ftposcd"
-PROG_VERSION        = "0.0.1"
+PROG_VERSION        = "0.0.2"
 PROG_AUTHOR         = "Shane Hutter"
 PROG_AUTHOR_EMAIL   = "shane@intentropycs.com"
 PROG_DESC           = """This software connects to the Fishman Triple Play USB MIDI

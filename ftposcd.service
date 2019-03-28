@@ -1,0 +1,12 @@
+[Unit]
+Description=Fishman TriplePlay Open Sound Control daemon
+After=network.target
+Before=shutdown.target reboot.target halt.target
+
+[Service]
+PIDFile=/tmp/ftposcd.pid
+ExecStart=/usr/bin/ftposcd
+ExecStop=/bin/kill -TERM $MAINPID
+
+[Install]
+WantedBy=multi-user.target
