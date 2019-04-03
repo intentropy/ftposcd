@@ -51,7 +51,10 @@ receiver and converts the MIDI data into Open Sound Control data, which is then 
 designated host.  This software will also recieve certain OSC messages, convert the message
 into MIDI data, and send it into the Fishman Triple Play allowing for some control of the device"""
 PROG_PACKAGES       = [ "FTP" , ]
-
+PROG_EXECUTABLES    = [ 
+        "ftposcd"       ,
+        "ftposc2midi"   ,
+        ]
 
 
 ## System Constants
@@ -64,17 +67,17 @@ PREFERED_PATHS      = (
         "/bin"              ,
         )
 PATH_DELIMITER      = ":"
-ENVIRONMENT_PATHS   = tuple(
+PATHS   = tuple(
         environ[ "PATH" ].split( PATH_DELIMITER )
         )
 # Determine system path
 PATH    = None
-for path in PREFERED_PATHS:
-    if path in ENVIRONMENT_PATHS:
+for path in PATHS:
+    if path in PREFERED_PATHS:
         PATH    = path
         break
 if not PATH:
-    PATH    = ENVIRONMENT_PATHS[ FIRST_INDEX ]
+    PATH    = PATHS[ FIRST_INDEX ]
 
 # Systemd
 SYSTEMD = {}

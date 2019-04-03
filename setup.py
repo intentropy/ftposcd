@@ -14,7 +14,7 @@ from distutils.core     import setup
 from FTP                import (
         PROG_NAME           , PROG_VERSION          , PROG_AUTHOR   ,
         PROG_AUTHOR_EMAIL   , PROG_DESC             , PROG_PACKAGES ,
-        PATH                , 
+        PATH                , PROG_EXECUTABLES      ,
         SYSTEMD_UNIT_DIR    , SYSTEMD_SERVICE_UNIT  ,
         )
 from FTP.config         import (
@@ -32,10 +32,8 @@ setup(
         packages            = PROG_PACKAGES                     ,
         data_files          = [
             (
-                PATH                ,   # Installed executable in systems $PATH
-                [
-                    PROG_NAME               ,
-                    ]   ,
+                PATH                ,   # Installed executables in systems $PATH
+                PROG_EXECUTABLES    ,
                 )   ,
             ( 
                 CONFIG_DIR          ,   # Configuration file
